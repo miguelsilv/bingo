@@ -1,29 +1,17 @@
 import 'dart:math';
 
+import 'package:bingo/repositories/bingo_repository.dart';
 import 'package:bingo/widgets/ball_bingo.dart';
 import 'package:bingo/widgets/footter.dart';
 import 'package:bingo/widgets/header.dart';
 import 'package:flutter/material.dart';
 
-List<int> _getRandomChart() {
-  List<int> list = [];
-  for (int i = 0; i < 24; i++) {
-    var value = Random().nextInt(99) + 1;
-    if (!list.contains(value)) {
-      list.add(value);
-    } else {
-      i--;
-    }
-  }
-  list.sort();
-  list.insert(12, 0);
-  return list;
-}
+final _repository = BingoRepository();
 
-final List<int> randomNumbers = _getRandomChart();
+class BingoCardPage extends StatelessWidget {
+  const BingoCardPage(this.card);
 
-class NumberChartPage extends StatelessWidget {
-  const NumberChartPage();
+  final BingoCard card;
 
   @override
   Widget build(BuildContext context) {
@@ -40,24 +28,39 @@ class NumberChartPage extends StatelessWidget {
 
   Widget _buildScreen(BuildContext context) {
     var themeData = Theme.of(context);
+    var queryData = MediaQuery.of(context);
+
     return Column(
       children: [
         const HeaderWidget(),
         Expanded(
           flex: 1,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: 10,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            itemBuilder: (context, index) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 5),
-                child: BallBingoWidget(
-                  value: 2,
-                  size: 80,
-                  color: themeData.primaryColor,
-                ),
-              );
+          child: StreamBuilder(
+            stream: _repository.getBingoDrawNumbersStream(card.sharedNumber),
+            builder: (context, AsyncSnapshot<List<int>> snapshot) {
+              if (snapshot.hasError) {
+                return const Text('Aconteceu um erro!');
+              }
+
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const Center(
+                  child: CircularProgressIndicator(),
+                );
+              }
+
+              return ListView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: snapshot.data!.map((int number) {
+                    return Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 5),
+                      child: BallBingoWidget(
+                        value: number,
+                        size: 80,
+                        color: themeData.primaryColor,
+                      ),
+                    );
+                  }).toList());
             },
           ),
         ),
@@ -66,6 +69,13 @@ class NumberChartPage extends StatelessWidget {
           child: Container(
             child: _buildNumbers(context),
           ),
+        ),
+        Text(
+          "${card.playerName}#${card.sharedNumber}",
+          style: TextStyle(
+              fontSize: queryData.size.width * 0.05,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey[600]),
         ),
         const FooterWidget(),
       ],
@@ -79,34 +89,16 @@ class NumberChartPage extends StatelessWidget {
         crossAxisCount: 5,
         childAspectRatio: 1.1,
       ),
-      itemCount: randomNumbers.length,
+      itemCount: card.numbers.length,
       itemBuilder: (context, index) {
         return CardButton(
-          value: randomNumbers[index],
+          value: card.numbers[index],
           onChange: (isActive) {
             isActive = isActive;
           },
         );
       },
     );
-
-    // return GridView.count(
-    //   primary: false,
-    //   childAspectRatio: 1.1,
-    //   padding: const EdgeInsets.all(15),
-    //   crossAxisCount: 5,
-    //   children: List.generate(
-    //     25,
-    //     (index) {
-    //       return CardButton(
-    //         value: index != 12 ? index + 1 : 0,
-    //         onChange: (isActive) {
-    //           isActive = isActive;
-    //         },
-    //       );
-    //     },
-    //   ),
-    // );
   }
 }
 

@@ -43,11 +43,33 @@ mixin _$DrawNumberStore on _DrawNumberStore, Store {
       ActionController(name: '_DrawNumberStore');
 
   @override
-  void draw() {
+  void draw(int sharedNumber) {
     final _$actionInfo = _$_DrawNumberStoreActionController.startAction(
         name: '_DrawNumberStore.draw');
     try {
-      return super.draw();
+      return super.draw(sharedNumber);
+    } finally {
+      _$_DrawNumberStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void reset() {
+    final _$actionInfo = _$_DrawNumberStoreActionController.startAction(
+        name: '_DrawNumberStore.reset');
+    try {
+      return super.reset();
+    } finally {
+      _$_DrawNumberStoreActionController.endAction(_$actionInfo);
+    }
+  }
+
+  @override
+  void recovery(List<int> draws) {
+    final _$actionInfo = _$_DrawNumberStoreActionController.startAction(
+        name: '_DrawNumberStore.recovery');
+    try {
+      return super.recovery(draws);
     } finally {
       _$_DrawNumberStoreActionController.endAction(_$actionInfo);
     }
